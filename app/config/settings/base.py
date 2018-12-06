@@ -35,6 +35,7 @@ SECRET_KEY = secrets['SECRET_KEY']
 INSTALLED_APPS = [
     'members.apps.MembersConfig',
     'items.apps.ItemsConfig',
+    'bill.apps.BillConfig',
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -44,7 +45,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
-    'corsheaders'
+    'rest_framework.authtoken',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -59,10 +61,20 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    )
+}
+
+
 CORS_ORIGIN_WHITELIST = (
     'google.com',
     'localhost:8000',
     '127.0.0.1:8000',
+    'localhost:3000',
+    '127.0.0.1:3000',
 )
 
 ROOT_URLCONF = 'config.urls'
