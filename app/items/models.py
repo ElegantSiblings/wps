@@ -75,20 +75,38 @@ class Description(models.Model):
     added_words = models.CharField(max_length=200, null=True, blank=True)
     point = models.IntegerField(default=0)
     delivery_type = models.CharField(max_length=200)
-    receive_day = models.CharField(max_length=100)
+    receive_day = models.CharField(max_length=200)
     regular_delivery = models.BooleanField(default=False)
 
     # 상품정보고시 내용
-    item_type = models.CharField(max_length=50)
+    item_type = models.CharField(max_length=2000)
     factory_address = models.TextField()
-    dom = models.CharField(max_length=100)
-    capacity = models.CharField(max_length=30)
+    dom = models.CharField(max_length=2000)
+    capacity = models.CharField(max_length=300)
     ingredient = models.TextField()
     allergy_material = models.TextField()
     caution = models.TextField()
 
     def __str__(self):
         return f'[{self.item.company}]{self.item.item_name}'
+
+
+class Comment(models.Model):
+    item = models.ForeignKey(
+        Item,
+        on_delete=models.CASCADE,
+    )
+    nickname = models.CharField(max_length=50, default='익명 사용자')
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'[{self.item.company}]{self.item.item_name}/{self.content}'
+
+
 
 
 

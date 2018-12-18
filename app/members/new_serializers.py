@@ -3,19 +3,18 @@ from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import AuthenticationFailed
 
-from items.serializers import ItemsSimpleSerializer
+from items.new_serializers import ItemsSimpleSerializer
 from .models import LikeItem
 
 User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
-    user_pk = serializers.CharField(source='pk')
 
     class Meta:
         model = User
         fields = (
-            'user_pk',
+            'pk',
             'username',
             'first_name',
             'last_name',

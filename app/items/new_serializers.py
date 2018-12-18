@@ -5,28 +5,25 @@ from .models import Item, Category, ItemImage, Description, Comment
 
 # category 종류를 보여줌
 class CategorySerializer(serializers.ModelSerializer):
-    category_pk = serializers.CharField(source='pk')
 
     class Meta:
         model = Category
         fields = (
-            'category_pk',
+            'pk',
             'main_category',
             'sub_category',
-            'photo',
+            'photo'
         )
 
 
 # 반찬 List를 보여주는 page에 필요한 serializer
 class ItemsSimpleSerializer(serializers.ModelSerializer):
-    item_pk = serializers.CharField(source='pk')
-
     class Meta:
         model = Item
         fields = (
-            'item_pk',
-            'company',
+            'pk',
             'item_name',
+            'company',
             'origin_price',
             'sale_price',
             'discount_rate',
@@ -36,14 +33,11 @@ class ItemsSimpleSerializer(serializers.ModelSerializer):
 
 # Description의 Serializer
 class ItemDescriptionSerializer(serializers.ModelSerializer):
-    description_pk = serializers.CharField(source='pk')
-    item_pk = serializers.CharField(source='item.pk')
-
     class Meta:
         model = Description
         fields = (
-            'item_pk',
-            'description_pk',
+            'pk',
+            'item',
             'added_words',
             'point',
             'delivery_type',
@@ -61,14 +55,12 @@ class ItemDescriptionSerializer(serializers.ModelSerializer):
 
 # ItemImage의 Serializer
 class ItemImageSerializer(serializers.ModelSerializer):
-    item_image_pk = serializers.CharField(source='pk')
-    item_pk = serializers.CharField(source='item.pk')
 
     class Meta:
         model = ItemImage
         fields = (
-            'item_pk',
-            'item_image_pk',
+            'pk',
+            'item',
             'photo_type',
             'image_order',
             'photo'
@@ -94,12 +86,10 @@ class ItemDetailSerializer(serializers.ModelSerializer):
     itemimage_set = ItemImageSerializer(many=True)
     comment_set = CommentSerializer(many=True)
 
-    item_pk = serializers.CharField(source='pk')
-
     class Meta:
         model = Item
         fields = (
-            'item_pk',
+            'pk',
             'company',
             'item_name',
             'origin_price',

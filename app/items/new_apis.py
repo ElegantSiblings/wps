@@ -1,41 +1,28 @@
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-from django.db.models import Q
-from rest_framework import status
+from rest_framework import status, generics
 from rest_framework.generics import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from .models import Item, Category, Comment
-from .serializers import CategorySerializer, ItemsSimpleSerializer, ItemDetailSerializer, CommentSerializer
+from .new_serializers import CategorySerializer, ItemsSimpleSerializer, ItemDetailSerializer, CommentSerializer
 
 
-# 메인 화면에 카테고리들의 pk를 보내준다
-class CategoryItemListAPIView(APIView):
-    def get(self, request, format=None):
-        if not request.query_params:
-            # query_params가 비어있으면 Category List 보여주기
-            # 카테고리중 반찬브랜드 카테고리 제외
-            categories = Category.objects.exclude(
-                Q(pk=57) | Q(pk=58) | Q(pk=59) | Q(pk=60) | Q(pk=61) | Q(pk=62)).order_by('pk')
-            return Response(CategorySerializer(categories, many=True).data)
+# 전체 category 보여주기
+class CategoryListAPIView(generics.ListAPIView):
+    queryset = Category.objects.filter(pk__lt=57)
+    serializer_class = CategorySerializer
 
-        ###################################################################
-        # category subcategory내용과 img, list들 보여주기
 
-        # query_params에서 pk, page 값을 가져옴
-        categories_pk = request.query_params.get('category_pk')
+# 각 카테고리에 속한 item list를 보여준다
+class CategoryAPIView(APIView):
+    def get(self, request, pk, format=None):
+        # query_params에서 page 값을 가져옴
         page = request.query_params.get('page')
         is_ios = request.query_params.get('is_ios')
 
-        # pk로 보내지 않은 경우
-        if not categories_pk:
-            data = {
-                'error': 'parameter를 category_pk로 보내주세요',
-            }
-            return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
-
         try:
-            category = Category.objects.get(pk=categories_pk)
+            category = Category.objects.get(pk=pk)
         except Category.DoesNotExist:
             data = {
                 'error': '존재하지 않는 category입니다',
@@ -81,41 +68,20 @@ class CategoryItemListAPIView(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
-class ItemDetailAPIView(APIView):
-    def get(self, request, format=None):
-        item_pk = request.query_params.get('item_pk')
-
-        # pk로 보내지 않은 경우
-        if not item_pk:
-            data = {
-                'error': 'parameter를 item_pk로 보내주세요, 또는 parameter를 보내지 않았습니',
-            }
-            return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            item = Item.objects.get(pk=item_pk)
-        except Item.DoesNotExist:
-            data = {
-                'error': '존재하지 않는 item 입니다',
-            }
-            return Response(data=data, status=status.HTTP_404_NOT_FOUND)
-
-        return Response(ItemDetailSerializer(item).data)
+class ItemDetailAPIView(generics.RetrieveAPIView):
+    queryset = Item.objects.all()
+    serializer_class = ItemDetailSerializer
 
 
 class CommentView(APIView):
     def post(self, request):
-        item = get_object_or_404(Item, pk=request.data.get('item_pk'))
         nickname = request.data.get('nickname')
 
         if request.auth and not nickname:
             nickname = request.user.username
 
         serializer = CommentSerializer(
-            data={
-                **request.data,
-                'item': item.pk
-            },
+            data=request.data,
             context={'request': request}
         )
         if serializer.is_valid():
@@ -126,7 +92,7 @@ class CommentView(APIView):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        comments = Comment.objects.filter(item=item)
+        comments = Comment.objects.filter(item__pk=request.data.get('item'))
 
         return Response(CommentSerializer(comments, many=True).data, status=status.HTTP_201_CREATED)
 
@@ -150,9 +116,9 @@ class SearchView(APIView):
             }
             return Response(data, status=status.HTTP_400_BAD_REQUEST)
 
-        items = Item.objects.filter(item_name__contains=search_str).order_by('pk') | \
-                Item.objects.filter(company__contains=search_str).order_by('pk') | \
-                Item.objects.filter(description__item_type__contains=search_str).order_by('pk')
+        items = Item.objects.filter(item_name__contains=search_str) | \
+                Item.objects.filter(company__contains=search_str) | \
+                Item.objects.filter(description__item_type__contains=search_str)
 
         page_list = []
         if is_ios == 'true':
